@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ernährungsplan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;background:#F2F2F7;color:#000;height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+.hdr{background:#fff;padding:16px 16px 12px;border-bottom:1px solid #E5E5EA;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.hdr-t{font-size:22px;font-weight:700}
+.hdr-s{font-size:13px;color:#8E8E93;margin-top:3px}
+.btn-nw{background:#F0E4DF;color:#D4522A;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:600}
+.tabs{display:flex;border-bottom:1px solid #E5E5EA;background:#fff;flex-shrink:0}
+.tab{flex:1;padding:10px 0 12px;display:flex;flex-direction:column;align-items:center;gap:4px;border-bottom:2px solid transparent}
+.tab.on{border-bottom-color:#D4522A}
+.tab svg path,.tab svg rect{stroke:#8E8E93}
+.tab.on svg path,.tab.on svg rect{stroke:#D4522A}
+.tab-lbl{font-size:10px;font-weight:400;color:#8E8E93}
+.tab.on .tab-lbl{font-weight:600;color:#D4522A}
+.pane{flex:1;overflow-y:auto;padding-bottom:0;display:none}
+.pane.on{display:block}
+.pad{padding:16px}
+.wsel{display:flex;gap:6px;margin-bottom:12px}
+.wbtn{flex:1;padding:7px 0;border-radius:10px;font-size:13px;font-weight:400;color:#8E8E93;border:1px solid #E5E5EA}
+.wbtn.on{background:#D4522A;color:#fff;border-color:#D4522A;font-weight:600}
+.day-strip{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;background:#fff;border-bottom:1px solid #E5E5EA;-webkit-overflow-scrolling:touch}
+.day-strip::-webkit-scrollbar{display:none}
+.day-btn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;padding:4px 2px}
+.day-lbl{font-size:12px;color:#8E8E93}
+.day-btn.on .day-lbl{color:#D4522A;font-weight:600}
+.day-circle{width:36px;height:36px;border-radius:50%;background:#F2F2F7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#3C3C43}
+.day-btn.on .day-circle{background:#D4522A;color:#fff}
+.day-detail{padding:16px}
+.day-name-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.day-name{font-size:22px;font-weight:700}
+.genuss-badge{font-size:12px;font-weight:600;background:#F3E8FF;color:#AF52DE;padding:4px 10px;border-radius:20px}
+.meal-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.meal-inner{padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.meal-left{flex:1;padding-right:12px}
+.meal-label{font-size:11px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.meal-name{font-size:16px;font-weight:600;line-height:1.3}
+.meal-sub{font-size:13px;color:#8E8E93;margin-top:2px}
+.meal-right{display:flex;align-items:center;gap:10px}
+.rez-btn{font-size:13px;color:#D4522A;font-weight:500}
+.check-circle{width:28px;height:28px;border-radius:50%;background:#E5E5EA;display:flex;align-items:center;justifycontent:center;flex-shrink:0;border:none;transition:background .15s}
+.check-circle.on{background:#D4522A}
+.check-circle.on::after{content:'✓';color:#fff;font-size:14px}
+.starttag-sec{margin-top:20px}
+.sec-lbl{font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.strow{display:flex;gap:6px}
+.stbtn{flex:1;padding:8px 0;border-radius:10px;font-size:12px;color:#8E8E93;border:1px solid #E5E5EA}
+.stbtn.on{background:#D4522A;color:#fff;border-color:#D4522A;font-weight:600}
+/* Rezepte */
+.oats-card{background:#1A1A1A;border-radius:16px;padding:16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.oats-name{font-size:16px;font-weight:700;color:#F0EBE3}
+.oats-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+.oats-arr{color:rgba(255,255,255,.4);font-size:20px}
+.woche-list{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rz-row{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #E5E5EA;cursor:pointer}
+.rz-row:last-child{border-bottom:none}
+.rz-day-badge{width:40px;height:40px;border-radius:10px;background:#F2F2F7;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;font-size:11px;font-weight:700;color:#8E8E93}
+.rz-day-badge.gn{background:#F3E8FF;color:#AF52DE}
+.rz-info{flex:1;min-width:0}
+.rz-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rz-meta{font-size:12px;color:#8E8E93;margin-top:2px}
+.rz-arr{color:#8E8E93;font-size:20px;margin-left:8px}
+/* Einkauf */
+.ek-hdr{background:#fff;padding:12px 16px;border-bottom:1px solid #E5E5EA}
+.ek-strow{display:flex;gap:6px;margin-bottom:12px}
+.ek-stbtn{flex:1;padding:8px 0;border-radius:10px;font-size:12px;color:#8E8E93;border:1px solid #E5E5EA}
+.ek-stbtn.on{background:#D4522A;color:#fff;border-color:#D4522A;font-weight:600}
+.ek-tbtn{flex:1;padding:8px 0;border-radius:10px;font-size:12px;color:#8E8E93;border:1px solid #E5E5EA}
+.ek-tbtn.on{background:#D4522A;color:#fff;border-color:#D4522A;font-weight:600}
+.prog-wrap{padding:16px 16px 0}
+.prog-row{display:flex;justify-content:space-between;margin-bottom:8px}
+.prog-t{font-size:14px;font-weight:600}
+.prog-s{font-size:14px;color:#8E8E93}
+.prog-bar{height:4px;background:#E5E5EA;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:#D4522A;border-radius:2px;transition:width .3s}
+.kat-sec{margin-bottom:20px}
+.kat-lbl{font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.ek-item{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #E5E5EA;cursor:pointer;gap:12px;background:#fff}
+.ek-item:first-child{border-radius:16px 16px 0 0}
+.ek-item:last-child{border-bottom:none;border-radius:0 0 16px 16px}
+.ek-item:only-child{border-radius:16px}
+.ek-chk{width:24px;height:24px;border-radius:50%;border:2px solid #E5E5EA;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ek-chk.on{background:#D4522A;border-color:#D4522A}
+.ek-chk.on::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+.ek-name{font-size:16px;flex:1}
+.ek-name.done{text-decoration:line-through;color:#8E8E93}
+.ek-menge{font-size:15px;color:#8E8E93;font-weight:500}
+.ek-actions{padding:0 16px 40px;display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.btn-notion{padding:16px;border-radius:14px;font-size:16px;font-weight:600;text-align:center;background:#D4522A;color:#fff;border:none;cursor:pointer}
+.btn-notion:disabled{background:#E5E5EA;color:#8E8E93;cursor:not-allowed}
+.btn-copy{padding:16px;border-radius:14px;font-size:16px;font-weight:600;text-align:center;background:transparent;color:#D4522A;border:1.5px solid #E5E5EA;cursor:pointer}
+.btn-copy:disabled{color:#8E8E93;cursor:not-allowed}
+.notion-ok{padding:12px 16px;border-radius:12px;background:#D1FAE5;color:#065F46;font-size:14px;text-align:center}
+.notion-err{padding:12px 16px;border-radius:12px;background:#FEE2E2;color:#991B1B;font-size:14px;text-align:center}
+/* Sheet */
+.sheet-overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;justify-content:flex-end;display:none}
+.sheet-overlay.on{display:flex}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.sheet-body{position:relative;background:#fff;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;z-index:1}
+.sheet-handle{display:flex;justify-content:center;padding:12px 0 4px}
+.sheet-handle-bar{width:40px;height:4px;border-radius:2px;background:#E5E5EA}
+.sheet-hdr{padding:4px 20px 16px;border-bottom:1px solid #E5E5EA}
+.sheet-hdr-row{display:flex;justify-content:space-between;align-items:flex-start}
+.sheet-title{font-size:20px;font-weight:700;line-height:1.2;flex:1;padding-right:12px}
+.sheet-kcal{font-size:13px;color:#8E8E93;margin-top:4px}
+.sheet-close{width:32px;height:32px;border-radius:50%;background:#F2F2F7;border:none;cursor:pointer;font-size:16px;color:#8E8E93;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sheet-content{padding:16px 20px 40px}
+.port-row{display:flex;align-items:center;justify-content:space-between;background:#F2F2F7;border-radius:12px;padding:10px 16px;margin-bottom:16px}
+.port-lbl{font-size:15px;font-weight:500}
+.port-ctrl{display:flex;align-items:center;gap:16px}
+.port-btn{width:32px;height:32px;border-radius:50%;background:#D4522A;border:none;cursor:pointer;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
+.port-val{font-size:17px;font-weight:600;min-width:24px;text-align:center}
+.bei-toggle{background:#F2F2F7;border-radius:12px;padding:4px;margin-bottom:16px;display:flex;gap:4px}
+.bei-btn{flex:1;padding:8px 4px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:transparent;color:#8E8E93}
+.bei-btn.on{background:#fff;color:#D4522A;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.sh-sec-lbl{font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.zu-list{background:#F2F2F7;border-radius:12px;overflow:hidden;margin-bottom:20px}
+.zu-row{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #E5E5EA;align-items:center;font-size:15px}
+.zu-row:last-child{border-bottom:none}
+.zu-menge{color:#8E8E93;font-weight:500}
+.step-list{display:flex;flex-direction:column;gap:10px}
+.step-row{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:26px;height:26px;border-radius:50%;background:#D4522A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.step-txt{font-size:15px;line-height:1.55;padding-top:3px;flex:1}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-t">Ernährungsplan</div>
+    <div class="hdr-s" id="hdr-sub">Woche 1 · 3-Wochen-Rotation</div>
+  </div>
+  <button class="btn-nw" onclick="naechsteWoche()">Neue Woche</button>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="showTab('plan')" id="tab-plan">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="3" stroke="#8E8E93" stroke-width="1.8"/><path d="M3 9h18" stroke="#8E8E93" stroke-width="1.8"/><path d="M8 2v4M16 2v4" stroke="#8E8E93" stroke-width="1.8" stroke-linecap="round"/><rect x="7" y="13" width="3" height="3" rx=".5" fill="#8E8E93"/><rect x="11" y="13" width="3" height="3" rx=".5" fill="#8E8E93"/></svg>
+    <span class="tab-lbl">Plan</span>
+  </button>
+  <button class="tab" onclick="showTab('rezepte')" id="tab-rezepte">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 4h7a4 4 0 014 4v13a3 3 0 00-3-3H4V4z" stroke="#8E8E93" stroke-width="1.8"/><path d="M20 4h-7a4 4 0 00-4 4v13a3 3 0 013-3h8V4z" stroke="#8E8E93" stroke-width="1.8"/></svg>
+    <span class="tab-lbl">Rezepte</span>
+  </button>
+  <button class="tab" onclick="showTab('einkauf')" id="tab-einkauf">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="#8E8E93" stroke-width="1.8"/><path d="M3 6h18" stroke="#8E8E93" stroke-width="1.8"/><path d="M16 10a4 4 0 01-8 0" stroke="#8E8E93" stroke-width="1.8"/></svg>
+    <span class="tab-lbl">Einkauf</span>
+  </button>
+</div>
+
+<div class="pane on" id="pane-plan"></div>
+<div class="pane" id="pane-rezepte"></div>
+<div class="pane" id="pane-einkauf"></div>
+
+<!-- Sheet -->
+<div class="sheet-overlay" id="sheet">
+  <div class="sheet-bg" onclick="closeSheet()"></div>
+  <div class="sheet-body">
+    <div class="sheet-handle"><div class="sheet-handle-bar"></div></div>
+    <div class="sheet-hdr">
+      <div class="sheet-hdr-row">
+        <div>
+          <div class="sheet-title" id="sh-title"></div>
+          <div class="sheet-kcal" id="sh-kcal"></div>
+        </div>
+        <button class="sheet-close" onclick="closeSheet()">✕</button>
+      </div>
+    </div>
+    <div class="sheet-content" id="sh-content"></div>
+  </div>
+</div>
+
+<script>
+const WK=["Mo","Di","Mi","Do","Fr","Sa","So"];
+const WL=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const KATS=["Obst & Gemüse","Kühlregal","Fleisch & Fisch","Brot & Backwaren","Trockenwaren & Pasta","Konserven & Gläser","Gewürze & Öle","Tiefkühl","Sonstiges"];
+const KM={"Früchte":"Obst & Gemüse","Tomaten":"Obst & Gemüse","Kirschtomaten":"Obst & Gemüse","Gurke":"Obst & Gemüse","Paprika":"Obst & Gemüse","Möhren":"Obst & Gemüse","Brokkoli":"Obst & Gemüse","Blumenkohl":"Obst & Gemüse","Süßkartoffeln":"Obst & Gemüse","Kartoffeln":"Obst & Gemüse","Mehlig kochende Kartoffeln":"Obst & Gemüse","Festkochende Kartoffeln":"Obst & Gemüse","Große Kartoffeln":"Obst & Gemüse","Kohlrabi":"Obst & Gemüse","Zwiebel":"Obst & Gemüse","Knoblauch":"Obst & Gemüse","Zitrone":"Obst & Gemüse","Spinat":"Obst & Gemüse","Frühlingszwiebeln":"Obst & Gemüse","Ingwer":"Obst & Gemüse","Dill":"Obst & Gemüse","Petersilie":"Obst & Gemüse","Frischer Salbei":"Obst & Gemüse","Basilikum":"Obst & Gemüse","Schnittlauch":"Obst & Gemüse","Frischer Koriander":"Obst & Gemüse","Oregano":"Obst & Gemüse","Thymian":"Obst & Gemüse","Limette":"Obst & Gemüse","Skyr natur":"Kühlregal","Milch (1,5%)":"Kühlregal","Griechischer Joghurt":"Kühlregal","Quark":"Kühlregal","Kräuterquark":"Kühlregal","Magerquark":"Kühlregal","Mozzarella":"Kühlregal","Feta":"Kühlregal","Parmesan":"Kühlregal","Käse (Gouda/Emmentaler)":"Kühlregal","Käse gerieben":"Kühlregal","Butter":"Kühlregal","Eier":"Kühlregal","Putenscheiben":"Kühlregal","Magerer Speck":"Fleisch & Fisch","Hähnchenbrust":"Fleisch & Fisch","Hähnchenstreifen":"Fleisch & Fisch","Rinderhack":"Fleisch & Fisch","TK-Lachsfilet":"Tiefkühl","Garnelen (TK)":"Tiefkühl","TK-Gyoza/Dumplings":"Tiefkühl","Vollkornbrot":"Brot & Backwaren","Vollkorn-Pita":"Brot & Backwaren","Vollkorn-Wraps":"Brot & Backwaren","Ciabatta":"Brot & Backwaren","Haferflocken (zart)":"Trockenwaren & Pasta","Chiasamen":"Trockenwaren & Pasta","Leinsamen (ganz)":"Trockenwaren & Pasta","Pasta":"Trockenwaren & Pasta","Udon-Nudeln":"Trockenwaren & Pasta","Reisnudeln":"Trockenwaren & Pasta","Basmatireis":"Trockenwaren & Pasta","Orzo":"Trockenwaren & Pasta","Thunfisch (Dose)":"Konserven & Gläser","Passierte Tomaten":"Konserven & Gläser","Kokosmilch light":"Konserven & Gläser","Rote Currypaste":"Konserven & Gläser","Hummus":"Konserven & Gläser","Gemüsebrühe":"Konserven & Gläser","Hühnerbrühe":"Konserven & Gläser","Olivenöl":"Gewürze & Öle","Sesamöl":"Gewürze & Öle","Rapsöl":"Gewürze & Öle","Sojasoße":"Gewürze & Öle","Honig":"Gewürze & Öle","Senf":"Gewürze & Öle","Kreuzkümmel":"Gewürze & Öle","Koriander gemahlen":"Gewürze & Öle","Paprika edelsüß":"Gewürze & Öle","Kurkuma":"Gewürze & Öle","Muskat":"Gewürze & Öle","Curry":"Gewürze & Öle","Zimt":"Gewürze & Öle","Kardamom":"Gewürze & Öle","Chiliflocken":"Gewürze & Öle","Reisessig":"Gewürze & Öle","Kapern":"Gewürze & Öle","Sesam":"Gewürze & Öle"};
+const gk=n=>KM[n]||"Sonstiges";
+const z=(n,m,e,v,c=null)=>({n,m,e,v,c});
+const fm=(v,e)=>{if(!e)return"nach Bedarf";const r=x=>Math.round(x*10)/10;if(e==="g")return r(v)+"g";if(e==="ml")return r(v)+"ml";if(e==="EL")return r(v)+" EL";if(e==="TL"){const x=r(v);return x===0.5?"½ TL":x===0.25?"¼ TL":x+" TL";}const x=r(v);return(x%1===0?x:x<1?"½":Math.floor(x)+" ½")+" "+e;};
+const sk=(it,p,b)=>{const f=p/b;const em=it.c!==null?Math.min(it.v*f,it.c):it.v*f;return fm(em,it.e);};
+
+const ZU={
+oats:[z("Haferflocken (zart)","50g","g",50),z("Skyr natur","200g","g",200),z("Milch (1,5%)","100ml","ml",100),z("Chiasamen","10g","g",10),z("Leinsamen (ganz)","8g","g",8),z("Früchte","100g","g",100)],
+jer:[z("Hähnchenbrust","600g","g",600),z("Paprika edelsüß","1 TL","TL",1),z("Kreuzkümmel","1 TL","TL",1),z("Curry","1 TL","TL",1),z("Hummus","300g","g",300),z("Paprika","3 Stück","Stück",3),z("Vollkorn-Pita","3 Stück","Stück",3),z("Frischer Koriander","1 Bund","Bund",1),z("Olivenöl","2 EL","EL",2),z("Knoblauch","2 Zehen","Zehen",2)],
+udon:[z("TK-Lachsfilet","450g","g",450),z("Udon-Nudeln","240g","g",240),z("Kokosmilch light","400ml","ml",400),z("Rote Currypaste","2 EL","EL",2),z("Brokkoli","300g","g",300),z("Möhren","2 Stück","Stück",2),z("Sojasoße","2 EL","EL",2),z("Ingwer","1 Stück","Stück",1),z("Knoblauch","2 Zehen","Zehen",2),z("Sesamöl","1 TL","TL",1)],
+salb:[z("Pasta","240g","g",240),z("Kirschtomaten","400g","g",400),z("Frischer Salbei","1 Bund","Bund",1),z("Hähnchenstreifen","400g","g",400),z("Butter","40g","g",40),z("Olivenöl","2 EL","EL",2),z("Knoblauch","2 Zehen","Zehen",2),z("Parmesan","60g","g",60)],
+lsue:[z("TK-Lachsfilet","450g","g",450),z("Süßkartoffeln","480g","g",480),z("Griechischer Joghurt","200g","g",200),z("Dill","1 Bund","Bund",1),z("Zitrone","1 Stück","Stück",1,1),z("Olivenöl","3 EL","EL",3),z("Paprika edelsüß","1 TL","TL",1),z("Knoblauch","1 Zehe","Zehen",1)],
+tsp:[z("Pasta","240g","g",240),z("Passierte Tomaten","400g","g",400),z("Magerer Speck","150g","g",150),z("Mozzarella","250g","g",250),z("Basilikum","1 Bund","Bund",1),z("Olivenöl","2 EL","EL",2),z("Knoblauch","2 Zehen","Zehen",2),z("Parmesan","60g","g",60),z("Chiliflocken","1 Prise","Prise",1)],
+shaw:[z("Hähnchenbrust","600g","g",600),z("Basmatireis","240g","g",240),z("Gurke","2 Stück","Stück",2),z("Tomaten","3 Stück","Stück",3),z("Griechischer Joghurt","300g","g",300),z("Kreuzkümmel","1 TL","TL",1),z("Koriander gemahlen","1 TL","TL",1),z("Paprika edelsüß","1 TL","TL",1),z("Kurkuma","0.5 TL","TL",0.5),z("Zimt","0.25 TL","TL",0.25),z("Kardamom","0.25 TL","TL",0.25),z("Knoblauch","3 Zehen","Zehen",3),z("Olivenöl","2 EL","EL",2),z("Zitrone","1 Stück","Stück",1,1)],
+frik:[z("Rinderhack","500g","g",500),z("Magerquark","150g","g",150),z("Haferflocken (zart)","50g","g",50),z("Möhren","2 Stück","Stück",2),z("Petersilie","1 Bund","Bund",1),z("Senf","1 TL","TL",1),z("Eier","1 Stück","Stück",1),z("Zwiebel","2 Stück","Stück",2),z("Rapsöl","3 EL","EL",3),z("Mehlig kochende Kartoffeln","640g","g",640),z("Kohlrabi","500g","g",500),z("Festkochende Kartoffeln","240g","g",240)],
+frikK:[z("Rinderhack","500g","g",500),z("Magerquark","50g","g",50),z("Haferflocken (zart)","50g","g",50),z("Möhren","2 Stück","Stück",2),z("Petersilie","1 Bund","Bund",1),z("Senf","1 TL","TL",1),z("Eier","1 Stück","Stück",1),z("Zwiebel","1 Stück","Stück",1),z("Rapsöl","3 EL","EL",3)],
+frikA:[z("Mehlig kochende Kartoffeln","640g","g",640),z("Magerquark","100g","g",100),z("Butter","20g","g",20)],
+frikB:[z("Kohlrabi","500g","g",500),z("Festkochende Kartoffeln","240g","g",240),z("Zwiebel","1 Stück","Stück",1)],
+garn:[z("Garnelen (TK)","500g","g",500),z("Kirschtomaten","400g","g",400),z("Knoblauch","4 Zehen","Zehen",4),z("Petersilie","1 Bund","Bund",1),z("Olivenöl","3 EL","EL",3),z("Zitrone","1 Stück","Stück",1,1),z("Ciabatta","1 Stück","Stück",1),z("Chiliflocken","1 TL","TL",1),z("Butter","20g","g",20)],
+thup:[z("Pasta","240g","g",240),z("Thunfisch (Dose)","3 Dosen","Dosen",3),z("Passierte Tomaten","500g","g",500),z("Knoblauch","3 Zehen","Zehen",3),z("Olivenöl","2 EL","EL",2),z("Basilikum","1 Bund","Bund",1),z("Parmesan","60g","g",60),z("Kapern","1 EL","EL",1),z("Chiliflocken","1 Prise","Prise",1)],
+teri:[z("TK-Lachsfilet","450g","g",450),z("Basmatireis","240g","g",240),z("Brokkoli","400g","g",400),z("Sojasoße","4 EL","EL",4),z("Honig","2 EL","EL",2),z("Ingwer","1 Stück","Stück",1),z("Knoblauch","2 Zehen","Zehen",2),z("Sesamöl","1 EL","EL",1),z("Reisessig","1 EL","EL",1)],
+pull:[z("Hähnchenbrust","600g","g",600),z("Vollkorn-Wraps","6 Stück","Stück",6),z("Griechischer Joghurt","300g","g",300),z("Knoblauch","3 Zehen","Zehen",3),z("Gurke","2 Stück","Stück",2),z("Tomaten","3 Stück","Stück",3),z("Zitrone","1 Stück","Stück",1,1),z("Paprika edelsüß","1 TL","TL",1),z("Kreuzkümmel","0.5 TL","TL",0.5),z("Hühnerbrühe","300ml","ml",300)],
+aufla:[z("Kartoffeln","480g","g",480),z("Brokkoli","400g","g",400),z("Blumenkohl","400g","g",400),z("Putenscheiben","400g","g",400),z("Eier","4 Stück","Stück",4),z("Quark","300g","g",300),z("Käse gerieben","150g","g",150),z("Muskat","nach Bedarf","",0),z("Paprika edelsüß","1 TL","TL",1),z("Knoblauch","2 Zehen","Zehen",2)],
+dump:[z("TK-Gyoza/Dumplings","500g","g",500),z("Kokosmilch light","400ml","ml",400),z("Rote Currypaste","2 EL","EL",2),z("Gemüsebrühe","400ml","ml",400),z("Sojasoße","2 EL","EL",2),z("Ingwer","1 Stück","Stück",1),z("Knoblauch","2 Zehen","Zehen",2),z("Brokkoli","200g","g",200),z("Paprika","2 Stück","Stück",2),z("Frühlingszwiebeln","3 Stück","Stück",3),z("Sesamöl","1 TL","TL",1),z("Limette","1 Stück","Stück",1)],
+opr:[z("Hähnchenbrust","600g","g",600),z("Basmatireis","240g","g",240),z("Paprika","2 Stück","Stück",2),z("Passierte Tomaten","400g","g",400),z("Hühnerbrühe","600ml","ml",600),z("Knoblauch","3 Zehen","Zehen",3),z("Olivenöl","2 EL","EL",2),z("Paprika edelsüß","1 TL","TL",1),z("Kreuzkümmel","0.5 TL","TL",0.5),z("Petersilie","0.5 Bund","Bund",0.5)],
+orzo:[z("TK-Lachsfilet","450g","g",450),z("Orzo","240g","g",240),z("Passierte Tomaten","400g","g",400),z("Spinat","200g","g",200),z("Gemüsebrühe","600ml","ml",600),z("Zitrone","1 Stück","Stück",1,1),z("Knoblauch","2 Zehen","Zehen",2),z("Olivenöl","2 EL","EL",2),z("Parmesan","60g","g",60),z("Chiliflocken","1 Prise","Prise",1)],
+bak:[z("Große Kartoffeln","4 Stück","Stück",4),z("Thunfisch (Dose)","2 Dosen","Dosen",2),z("Kräuterquark","400g","g",400),z("Zitrone","1 Stück","Stück",1,1),z("Senf","1 EL","EL",1),z("Olivenöl","1 EL","EL",1),z("Paprika edelsüß","0.5 TL","TL",0.5)],
+tikka:[z("Hähnchenbrust","600g","g",600),z("Basmatireis","240g","g",240),z("Griechischer Joghurt","400g","g",400),z("Kreuzkümmel","1 TL","TL",1),z("Koriander gemahlen","1 TL","TL",1),z("Paprika edelsüß","1 TL","TL",1),z("Kurkuma","0.5 TL","TL",0.5),z("Ingwer","1 Stück","Stück",1),z("Knoblauch","3 Zehen","Zehen",3),z("Zitrone","1 Stück","Stück",1,1),z("Chiliflocken","0.5 TL","TL",0.5)],
+ofen:[z("Hähnchenbrust","600g","g",600),z("Paprika","3 Stück","Stück",3),z("Möhren","2 Stück","Stück",2),z("Brokkoli","400g","g",400),z("Feta","200g","g",200),z("Olivenöl","3 EL","EL",3),z("Oregano","1 TL","TL",1),z("Thymian","1 TL","TL",1),z("Knoblauch","3 Zehen","Zehen",3)],
+hack:[z("Rinderhack","500g","g",500),z("Reisnudeln","200g","g",200),z("Paprika","1 Stück","Stück",1),z("Möhren","1 Stück","Stück",1),z("Frühlingszwiebeln","4 Stück","Stück",4),z("Knoblauch","3 Zehen","Zehen",3),z("Ingwer","1 Stück","Stück",1),z("Sojasoße","3 EL","EL",3),z("Sesamöl","1 EL","EL",1),z("Honig","1 EL","EL",1),z("Chiliflocken","0.5 TL","TL",0.5),z("Sesam","1 EL","EL",1)]
+};
+
+const AUFL={
+"Tomate-Mozzarella":[z("Tomaten","200g","g",200),z("Mozzarella","125g","g",125),z("Basilikum","1 Bund","Bund",1),z("Olivenöl","1 EL","EL",1)],
+"Brot mit Käse und Ei":[z("Vollkornbrot","2 Scheiben","Scheiben",2),z("Käse (Gouda/Emmentaler)","60g","g",60),z("Eier","1 Stück","Stück",1)],
+"Griechischer Salat":[z("Tomaten","2 Stück","Stück",2),z("Gurke","0.5 Stück","Stück",0.5),z("Paprika","1 Stück","Stück",1),z("Feta","80g","g",80),z("Olivenöl","1 EL","EL",1)],
+"Warmes Omelett":[z("Eier","3 Stück","Stück",3),z("Paprika","1 Stück","Stück",1),z("Käse gerieben","40g","g",40),z("Schnittlauch","1 Bund","Bund",1)]
+};
+
+const RZ={
+"Overnight Oats":{b:1,zu:ZU.oats,kcal:395,prot:35,st:["Skyr, Milch, Chiasamen und Leinsamen glatt rühren.","Haferflocken unterheben.","In ein Glas füllen, Früchte drauf.","Mindestens 6 Stunden kalt stellen."]},
+"Jerusalem Teller":{b:3,zu:ZU.jer,kcal:520,prot:45,st:["Hähnchenbrust in Streifen schneiden, mit Paprika edelsüß, Kreuzkümmel, Curry, Knoblauch und Olivenöl mindestens 20 Min. marinieren.","Paprika in breite Streifen schneiden und in sehr heißer Grillpfanne ohne Fett schwarz-fleckig rösten.","Hähnchen in derselben Pfanne scharf anbraten bis goldbraune Kruste entsteht.","Hummus auf Teller streichen, Hähnchen und Paprika drauf, Koriander zupfen. Mit warmem Pita servieren."]},
+"Udon mit Curry und Lachs":{b:3,zu:ZU.udon,kcal:480,prot:38,st:["Lachs auftauen, trocken tupfen, in Würfel schneiden. Brokkoli in Röschen, Möhren in Scheiben.","Currypaste 1–2 Min. anrösten. Ingwer und Knoblauch kurz mitrösten.","Kokosmilch und 150ml Wasser angießen, Sojasoße dazu. Gemüse in den Sud, 4 Min. köcheln.","Lachswürfel einlegen, Hitze reduzieren, 4–5 Min. ziehen lassen.","Udon-Nudeln kochen. In Schalen anrichten, Sesamöl drüber."]},
+"Nudeln mit Salbei und Tomaten":{b:3,zu:ZU.salb,kcal:560,prot:38,st:["Pasta al dente kochen, Kochwasser aufheben.","Hähnchenstreifen scharf anbraten bis goldbraun. Herausnehmen.","Butter in die Pfanne, Salbeiblätter knusprig frittieren. Knoblauch kurz mitrösten.","Kirschtomaten halbiert dazugeben, 3–4 Min. zerfallen lassen.","Pasta und Hähnchen unterheben, Kochwasser dazugeben. Parmesan drüber."]},
+"Lachs aus dem Ofen mit Süßkartoffeln":{b:3,zu:ZU.lsue,kcal:490,prot:42,st:["Ofen auf 200°C. Süßkartoffeln in Wedges schneiden, mit Olivenöl und Paprika edelsüß auf Blech.","15 Min. vorrösten bis sie Farbe bekommen.","Lachs auf das Blech legen, würzen. Weitere 12–15 Min. backen.","Joghurt-Dip aus Joghurt, Dill, Knoblauch und Zitronensaft rühren."]},
+"Nudeln mit Tomatensauce, Speck & Mozzarella":{b:3,zu:ZU.tsp,kcal:580,prot:35,st:["Speck in Würfel schneiden, langsam ausbraten bis knusprig.","Knoblauch mitrösten, mit passierten Tomaten ablöschen. Chiliflocken dazu, 15 Min. köcheln.","Pasta al dente kochen. Mit Kochwasser zur Sauce geben.","Mozzarella drauf, Basilikum zupfen, Parmesan reiben."]},
+"Hähnchen-Shawarma-Bowl":{b:3,zu:ZU.shaw,kcal:510,prot:48,st:["Alle Gewürze mit Olivenöl und Knoblauch zu Marinade mischen. Hähnchen mindestens 30 Min. einlegen.","Basmatireis waschen und kochen.","Hähnchen in sehr heißer Pfanne scharf anbraten — Gewürze sollen karamellisieren.","Gurke und Tomaten würfeln. Joghurt mit Knoblauch, Zitronensaft und Salz zu Soße rühren.","Bowls aufbauen: Reis, Hähnchen, Gemüse, Joghurt-Soße."]},
+"Frikadellen":{b:4,zu:ZU.frik,beilage:true,zuK:ZU.frikK,zuA:ZU.frikA,zuB:ZU.frikB,kcal:470,prot:40,stK:["Möhren fein raspeln, Petersilie fein hacken.","Hackfleisch mit Quark, Haferflocken, Senf, Möhren, Petersilie, Salz und Pfeffer verkneten. 8 Frikadellen formen, kalt stellen.","In beschichteter Pfanne bei mittlerer Hitze 6–7 Min. pro Seite braten."],stA:["Kartoffeln schälen, weich kochen, abgießen und ausdämpfen.","Stampfen, Quark und Butter einrühren, mit Salz, Muskat, Pfeffer abschmecken."],stB:["Kohlrabi und Kartoffeln in 1–2 cm Würfel schneiden, 2–3 Min. in Salzwasser vorgaren, abgießen.","Im übrigen Öl ca. 10 Min. goldbraun braten, nach 5 Min. Zwiebel dazugeben. Mit Salz, Pfeffer, Petersilie abschmecken."]},
+"Garnelen-Pfanne mit Ciabatta":{b:3,zu:ZU.garn,kcal:440,prot:38,st:["Garnelen auftauen, sehr gut trocken tupfen.","Öl auf höchste Stufe erhitzen. Garnelen 90 Sek. nicht bewegen, wenden, 60 Sek. Herausnehmen.","Knoblauch und Chiliflocken ins Öl, Kirschtomaten halbiert dazu, Butter einrühren.","Garnelen zurück, mit Zitronensaft und Petersilie schwenken.","Ciabatta toasten und dazu servieren."]},
+"Thunfisch-Pasta mit Tomatensauce":{b:3,zu:ZU.thup,kcal:490,prot:42,st:["Knoblauch in Scheiben goldbraun rösten.","Chiliflocken und Kapern dazu. Mit passierten Tomaten ablöschen, 12 Min. köcheln.","Pasta al dente kochen. Thunfisch abtropfen und grob in die Sauce einrühren.","Pasta mit Kochwasser zur Sauce. Basilikum zupfen, Parmesan drüber."]},
+"Teriyaki-Lachs mit Reis und Brokkoli":{b:3,zu:ZU.teri,kcal:460,prot:40,st:["Teriyaki-Glasur: Sojasoße, Honig, Ingwer, Knoblauch, Reisessig verrühren.","Lachs in Sesamöl auf der Hautseite 4 Min. anbraten bis die Haut kross ist. Wenden.","Glasur über den Lachs — sie karamellisiert sofort. 2–3 Min. fertig garen.","Reis kochen, Brokkoli 3–4 Min. bissfest blanchieren.","Anrichten, restliche Glasur drüber träufeln."]},
+"Pulled Chicken Wraps":{b:3,zu:ZU.pull,kcal:500,prot:44,st:["Hähnchen würzen, in Hühnerbrühe mit Knoblauch bei niedriger Hitze 20–25 Min. pochieren.","Zerzupfen, etwas Pochierflüssigkeit drüber.","Joghurt-Soße: Joghurt mit Knoblauch, Zitronensaft, Salz, Pfeffer.","Gurke und Tomaten würfeln. Wraps kurz anwärmen.","Belegen und fest einrollen."]},
+"Blumenkohl/Brokkoli/Kartoffelauflauf":{b:3,zu:ZU.aufla,kcal:420,prot:40,st:["Ofen auf 180°C. Kartoffeln hobeln, Gemüse in Röschen. Alles 5 Min. vorkochen.","Putenscheiben würzen, kurz anbraten bis sie Farbe bekommen.","Quark mit Eiern, Knoblauch, Muskat, Paprika edelsüß würzen.","Gemüse und Pute einschichten, Quark-Masse drüber, Käse drüber.","35–40 Min. backen bis goldbraun."]},
+"TK-Dumplings in Curry-Kokos-Sud":{b:3,zu:ZU.dump,kcal:430,prot:22,st:["Currypaste 2 Min. anrösten. Ingwer und Knoblauch dazu.","Kokosmilch und Brühe angießen, Sojasoße dazu.","Brokkoli und Paprika in den Sud, 4 Min. garen.","Dumplings direkt aus der TK einlegen, laut Packung garen.","Limettensaft, Sesamöl einrühren. Frühlingszwiebeln drüber."]},
+"One-Pot Hähnchen-Reis":{b:3,zu:ZU.opr,kcal:470,prot:44,st:["Hähnchen würfeln, würzen, scharf anbraten. Herausnehmen.","Paprika anschwitzen, Knoblauch dazu. Tomaten und Brühe angießen, Hähnchen zurück.","Reis einrühren, aufkochen, Deckel drauf. 18 Min. bei niedriger Hitze garen.","5 Min. ruhen, mit Petersilie abschmecken."]},
+"One-Pot Lachs-Orzo":{b:3,zu:ZU.orzo,kcal:480,prot:40,st:["Knoblauch goldbraun rösten, Chiliflocken dazu.","Tomaten und Brühe angießen, Orzo einrühren.","7–8 Min. unter gelegentlichem Rühren garen.","Lachs in Stücke brechen, einlegen, 5 Min. ziehen lassen.","Spinat unterheben. Mit Zitronensaft abschmecken, Parmesan drüber."]},
+"Baked Potato mit Thunfisch & Kräuterquark":{b:3,zu:ZU.bak,kcal:410,prot:36,st:["Ofen auf 200°C. Kartoffeln mit Olivenöl einreiben, mit grobem Salz bestreuen.","Mehrfach einstechen, 50–60 Min. auf dem Rost backen. Keine Alufolie.","Thunfisch mit Kräuterquark, Senf, Zitronensaft und Paprika edelsüß verrühren.","Kartoffeln einschneiden, aufdrücken, Füllung drauf."]},
+"Hähnchen-Tikka mit Reis":{b:3,zu:ZU.tikka,kcal:500,prot:46,st:["Marinade: 200g Joghurt mit allen Gewürzen, Ingwer, Knoblauch und Zitronensaft. Hähnchen mindestens 1 Stunde marinieren.","Restlichen Joghurt mit Zitronensaft zu Dip rühren.","Reis waschen und kochen.","Hähnchen in sehr heißer Pfanne anbraten — Marinade soll karamellisieren und leicht anbrennen.","Mit Reis und Joghurt-Dip servieren."]},
+"Ofengemüse mit Hähnchen und Feta":{b:3,zu:ZU.ofen,kcal:440,prot:46,st:["Ofen auf 200°C. Hähnchen in Stücke schneiden, mit Olivenöl, Oregano, Thymian, Knoblauch einreiben.","Paprika, Möhren, Brokkoli auf Backblech, Hähnchen obenauf.","25 Min. rösten bis karamellisiert und goldbraun.","Feta drüber bröseln, weitere 5 Min. Direkt vom Blech servieren."]},
+"Asiatische Hackfleisch-Bowl":{b:3,zu:ZU.hack,kcal:480,prot:38,st:["Reisnudeln nach Packung einweichen oder kochen.","Paprika und Möhren 3–4 Min. anbraten. Beiseite stellen.","Hack in sehr heißer Pfanne ohne Fett anbraten — nicht rühren bis braune Kruste entsteht.","Knoblauch und Ingwer dazu, Sojasoße, Honig, Sesamöl angießen — karamellisieren lassen.","Gemüse zurück, schwenken. Reisnudeln in Bowls, Hack drauf, Frühlingszwiebeln und Sesam drüber."]}
+};
+
+const P=[
+{k:"Jerusalem Teller",a:"Tomate-Mozzarella",gn:false},
+{k:"Udon mit Curry und Lachs",a:"Brot mit Käse und Ei",gn:false},
+{k:"Lachs aus dem Ofen mit Süßkartoffeln",a:"Griechischer Salat",gn:false},
+{k:"Hähnchen-Shawarma-Bowl",a:"Warmes Omelett",gn:false},
+{k:"Nudeln mit Salbei und Tomaten",a:"Griechischer Salat",gn:true},
+{k:"Ofengemüse mit Hähnchen und Feta",a:"Tomate-Mozzarella",gn:false},
+{k:"Frikadellen",a:"Brot mit Käse und Ei",gn:false},
+{k:"Garnelen-Pfanne mit Ciabatta",a:"Griechischer Salat",gn:false},
+{k:"Teriyaki-Lachs mit Reis und Brokkoli",a:"Warmes Omelett",gn:false},
+{k:"One-Pot Hähnchen-Reis",a:"Tomate-Mozzarella",gn:false},
+{k:"Asiatische Hackfleisch-Bowl",a:"Griechischer Salat",gn:false},
+{k:"Nudeln mit Tomatensauce, Speck & Mozzarella",a:"Brot mit Käse und Ei",gn:true},
+{k:"Pulled Chicken Wraps",a:"Griechischer Salat",gn:false},
+{k:"Blumenkohl/Brokkoli/Kartoffelauflauf",a:"Warmes Omelett",gn:false},
+{k:"TK-Dumplings in Curry-Kokos-Sud",a:"Tomate-Mozzarella",gn:false},
+{k:"Hähnchen-Tikka mit Reis",a:"Griechischer Salat",gn:false},
+{k:"One-Pot Lachs-Orzo",a:"Warmes Omelett",gn:false},
+{k:"Thunfisch-Pasta mit Tomatensauce",a:"Griechischer Salat",gn:false},
+{k:"Nudeln mit Salbei und Tomaten",a:"Brot mit Käse und Ei",gn:true},
+{k:"Baked Potato mit Thunfisch & Kräuterquark",a:"Tomate-Mozzarella",gn:false},
+{k:"Ofengemüse mit Hähnchen und Feta",a:"Griechischer Salat",gn:false}
+];
+
+// State
+let startTag=0, aktWoche=0, activeDay=0;
+let auswahl=Array(7).fill(null).map(()=>({f:true,a:true,k:true}));
+let vorhanden={};
+let aktiveTage=Array(7).fill(true);
+let sheetPort=3, sheetBei="A", sheetName="";
+let notionStatus="";
+let copyLabel="In Zwischenablage kopieren";
+
+function getTage(){
+  return Array(7).fill(null).map((_,i)=>({
+    wochentag:WL[(startTag+i)%7],
+    wtKurz:WK[(startTag+i)%7],
+    plan:P[(aktWoche*7+i)%21],
+    idx:i
+  }));
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(t){
+  ["plan","rezepte","einkauf"].forEach(id=>{
+    document.getElementById("pane-"+id).classList.toggle("on",id===t);
+    document.getElementById("tab-"+id).classList.toggle("on",id===t);
+    const svgEls=document.querySelectorAll("#tab-"+id+" svg path, #tab-"+id+" svg rect");
+    svgEls.forEach(el=>el.setAttribute("stroke",id===t?"#D4522A":"#8E8E93"));
+    const fillEls=document.querySelectorAll("#tab-"+id+" svg rect[fill]");
+    fillEls.forEach(el=>el.setAttribute("fill",id===t?"#D4522A":"#8E8E93"));
+  });
+  if(t==="einkauf")renderEinkauf();
+  if(t==="rezepte")renderRezepte();
+}
+
+// ── Plan ──────────────────────────────────────────────────────────────────────
+function naechsteWoche(){
+  aktWoche=(aktWoche+1)%3;
+  auswahl=Array(7).fill(null).map(()=>({f:true,a:true,k:true}));
+  document.getElementById("hdr-sub").textContent="Woche "+(aktWoche+1)+" · 3-Wochen-Rotation";
+  activeDay=0;
+  renderPlan();
+}
+
+function setWoche(i){
+  aktWoche=i;
+  auswahl=Array(7).fill(null).map(()=>({f:true,a:true,k:true}));
+  document.getElementById("hdr-sub").textContent="Woche "+(aktWoche+1)+" · 3-Wochen-Rotation";
+  activeDay=0;
+  renderPlan();
+}
+
+function setStartTag(i){
+  startTag=i;
+  aktiveTage=Array(7).fill(true);
+  activeDay=0;
+  renderPlan();
+  renderEinkauf();
+}
+
+function setActiveDay(i){
+  activeDay=i;
+  renderDayDetail();
+  // Update day strip
+  document.querySelectorAll(".day-btn").forEach((btn,idx)=>{
+    btn.classList.toggle("on",idx===i);
+  });
+}
+
+function toggleMeal(idx,typ){
+  auswahl[idx][typ]=!auswahl[idx][typ];
+  renderDayDetail();
+}
+
+function renderPlan(){
+  const tage=getTage();
+  const p=document.getElementById("pane-plan");
+
+  // Woche selector + day strip + day detail
+  let html=`<div style="background:#fff;padding:16px 16px 0;border-bottom:1px solid #E5E5EA">
+    <div class="wsel">
+      ${[0,1,2].map(i=>`<button class="wbtn${aktWoche===i?" on":""}" onclick="setWoche(${i})">Woche ${i+1}</button>`).join("")}
+    </div>
+  </div>
+  <div class="day-strip">
+    ${tage.map(({wtKurz,idx})=>`
+      <button class="day-btn${activeDay===idx?" on":""}" onclick="setActiveDay(${idx})">
+        <span class="day-lbl">${wtKurz}</span>
+        <div class="day-circle">${idx+1}</div>
+      </button>`).join("")}
+  </div>
+  <div class="day-detail" id="day-detail"></div>`;
+
+  p.innerHTML=html;
+  renderDayDetail();
+}
+
+function renderDayDetail(){
+  const tage=getTage();
+  const {plan,wochentag}=tage[activeDay];
+  const sel=auswahl[activeDay];
+  const rz=RZ[plan.k];
+
+  const meals=[
+    {typ:"f",label:"Frühstück",name:"Overnight Oats",sub:"~395 kcal · 35g Protein",showRez:true},
+    {typ:"a",label:"Mittag",name:plan.a,sub:"oder Reste vom Vorabend",showRez:false},
+    {typ:"k",label:"Abendessen",name:plan.k,sub:rz?`${rz.kcal} kcal · ${rz.prot}g Protein`:"",showRez:true}
+  ];
+
+  let html=`
+    <div class="day-name-row">
+      <div class="day-name">${wochentag}</div>
+      ${plan.gn?'<span class="genuss-badge">Genuss</span>':""}
+    </div>
+    ${meals.map(({typ,label,name,sub,showRez})=>`
+      <div class="meal-card">
+        <div class="meal-inner">
+          <div class="meal-left">
+            <div class="meal-label">${label}</div>
+            <div class="meal-name">${name}</div>
+            ${sub?`<div class="meal-sub">${sub}</div>`:""}
+          </div>
+          <div class="meal-right">
+            ${showRez?`<button class="rez-btn" onclick="openSheet('${name.replace(/'/g,"\\'")}')">Rezept</button>`:""}
+            <button class="check-circle${sel[typ]?" on":""}" onclick="toggleMeal(${activeDay},'${typ}')"></button>
+          </div>
+        </div>
+      </div>`).join("")}
+    <div class="starttag-sec">
+      <div class="sec-lbl">Starttag</div>
+      <div class="strow">
+        ${WK.map((t,i)=>`<button class="stbtn${startTag===i?" on":""}" onclick="setStartTag(${i})">${t}</button>`).join("")}
+      </div>
+    </div>`;
+
+  document.getElementById("day-detail").innerHTML=html;
+}
+
+// ── Rezepte ───────────────────────────────────────────────────────────────────
+function renderRezepte(){
+  const tage=getTage();
+  let html=`
+    <div class="pad">
+      <div class="wsel">
+        ${[0,1,2].map(i=>`<button class="wbtn${aktWoche===i?" on":""}" onclick="setWoche(${i});renderRezepte()">Woche ${i+1}</button>`).join("")}
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Täglich</div>
+      <div class="oats-card" onclick="openSheet('Overnight Oats')">
+        <div>
+          <div class="oats-name">Overnight Oats</div>
+          <div class="oats-sub">395 kcal · 35g Protein</div>
+        </div>
+        <span class="oats-arr">›</span>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;margin-top:16px">Diese Woche</div>
+      <div class="woche-list">
+        ${tage.map(({wtKurz,plan,idx})=>{
+          const r=RZ[plan.k];
+          return`<div class="rz-row" onclick="openSheet('${plan.k.replace(/'/g,"\\'")}')">
+            <div class="rz-day-badge${plan.gn?" gn":""}">${wtKurz}</div>
+            <div class="rz-info">
+              <div class="rz-name">${plan.k}</div>
+              ${r?`<div class="rz-meta">${r.kcal} kcal · ${r.prot}g Protein</div>`:""}
+            </div>
+            <span class="rz-arr">›</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+  document.getElementById("pane-rezepte").innerHTML=html;
+}
+
+// ── Einkauf ───────────────────────────────────────────────────────────────────
+function getEinkauf(){
+  const tage=getTage();
+  const map={};
+  tage.forEach(({plan,idx})=>{
+    if(!aktiveTage[idx])return;
+    const sel=auswahl[idx];
+    const add=zs=>zs.forEach(it=>{
+      if(!map[it.n])map[it.n]={n:it.n,e:it.e,v:0,c:it.c};
+      map[it.n].v+=it.v;
+    });
+    if(sel.f)add(ZU.oats);
+    if(sel.a)add(AUFL[plan.a]||[]);
+    if(sel.k){const r=RZ[plan.k];if(r)add(r.beilage?[...r.zuK,...r.zuA]:r.zu);}
+  });
+  const items=Object.values(map).map(it=>({n:it.n,m:fm(it.c!==null?Math.min(it.v,it.c):it.v,it.e)}));
+  const g={};KATS.forEach(k=>g[k]=[]);
+  items.forEach(it=>(g[gk(it.n)]||g["Sonstiges"]).push(it));
+  return KATS.map(k=>({kat:k,items:g[k].sort((a,b)=>a.n.localeCompare(b.n))})).filter(k=>k.items.length>0);
+}
+
+function toggleTag(idx){
+  aktiveTage[idx]=!aktiveTage[idx];
+  renderEinkauf();
+}
+
+function toggleVorhanden(n){
+  vorhanden[n]=!vorhanden[n];
+  const el=document.getElementById("ek-"+btoa(unescape(encodeURIComponent(n))).replace(/[^a-z0-9]/gi,""));
+  if(el){
+    el.querySelector(".ek-chk").classList.toggle("on",vorhanden[n]);
+    el.querySelector(".ek-name").classList.toggle("done",vorhanden[n]);
+  }
+  updateProgBar();
+}
+
+function updateProgBar(){
+  const kats=getEinkauf();
+  const alle=kats.flatMap(k=>k.items);
+  const ben=alle.filter(it=>!vorhanden[it.n]).length;
+  const prog=alle.length>0?((alle.length-ben)/alle.length)*100:0;
+  const fill=document.getElementById("prog-fill");
+  const bt=document.getElementById("prog-t");
+  const bs=document.getElementById("prog-s");
+  if(fill)fill.style.width=prog+"%";
+  if(bt)bt.textContent=ben+" noch benötigt";
+  if(bs)bs.textContent=(alle.length-ben)+" von "+alle.length;
+}
+
+function renderEinkauf(){
+  const tage=getTage();
+  const kats=getEinkauf();
+  const alle=kats.flatMap(k=>k.items);
+  const ben=alle.filter(it=>!vorhanden[it.n]).length;
+  const prog=alle.length>0?((alle.length-ben)/alle.length)*100:0;
+
+  let html=`
+    <div class="ek-hdr">
+      <div class="sec-lbl">Starttag</div>
+      <div class="ek-strow">
+        ${WK.map((t,i)=>`<button class="ek-stbtn${startTag===i?" on":""}" onclick="setStartTag(${i})">${t}</button>`).join("")}
+      </div>
+      <div class="sec-lbl">Einkauf für</div>
+      <div style="display:flex;gap:6px">
+        ${tage.map(({wtKurz,idx})=>`<button class="ek-tbtn${aktiveTage[idx]?" on":""}" onclick="toggleTag(${idx})">${wtKurz}</button>`).join("")}
+      </div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-row">
+        <span class="prog-t" id="prog-t">${ben} noch benötigt</span>
+        <span class="prog-s" id="prog-s">${alle.length-ben} von ${alle.length}</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:${prog}%"></div></div>
+    </div>
+    <div class="pad">
+      ${kats.map(({kat,items})=>`
+        <div class="kat-sec">
+          <div class="kat-lbl">${kat}</div>
+          <div>
+            ${items.map(it=>{
+              const done=!!vorhanden[it.n];
+              const id="ek-"+btoa(unescape(encodeURIComponent(it.n))).replace(/[^a-z0-9]/gi,"");
+              return`<div class="ek-item" id="${id}" onclick="toggleVorhanden('${it.n.replace(/'/g,"\\'")}')">
+                <div class="ek-chk${done?" on":""}"></div>
+                <span class="ek-name${done?" done":""}">${it.n}</span>
+                <span class="ek-menge">${it.m}</span>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>`).join("")}
+      <div class="ek-actions">
+        <button class="btn-notion" id="btn-notion" onclick="expNotion()" ${ben===0?"disabled":""}>In Notion speichern</button>
+        <button class="btn-copy" id="btn-copy" onclick="doCopy()" ${ben===0?"disabled":""}>${copyLabel}</button>
+        <div id="notion-msg"></div>
+      </div>
+    </div>`;
+
+  document.getElementById("pane-einkauf").innerHTML=html;
+}
+
+async function expNotion(){
+  const btn=document.getElementById("btn-notion");
+  if(!btn||btn.disabled)return;
+  btn.disabled=true;btn.textContent="Wird gespeichert…";
+  const kats=getEinkauf();
+  const heute=new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const titel="Einkaufsliste "+heute;
+  const txt=kats.map(({kat,items})=>{const r=items.filter(it=>!vorhanden[it.n]);if(!r.length)return"";return"**"+kat+"**\n"+r.map(it=>"- [ ] "+it.n+" ("+it.m+")").join("\n");}).filter(Boolean).join("\n\n");
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:'Erstelle eine Notion-Unterseite mit dem Titel "'+titel+'" als Unterseite von Page ID 817a3f8e-1b5a-430c-996d-9f7d34a6d0ff. Füge die Einkaufsliste als To-do-Blöcke ein. Antworte nur mit "OK".',messages:[{role:"user",content:titel+"\n\n"+txt}],mcp_servers:[{type:"url",url:"https://mcp.notion.com/mcp",name:"notion-mcp"}]})});
+    const d=await res.json();
+    const msg=document.getElementById("notion-msg");
+    if(d.content&&d.content.length>0){
+      btn.textContent="Gespeichert ✓";
+      if(msg)msg.innerHTML='<div class="notion-ok">In Notion gespeichert.</div>';
+    }else{
+      btn.disabled=false;btn.textContent="In Notion speichern";
+      if(msg)msg.innerHTML='<div class="notion-err">Fehler. Bitte nochmal versuchen.</div>';
+    }
+  }catch(e){
+    btn.disabled=false;btn.textContent="In Notion speichern";
+    const msg=document.getElementById("notion-msg");
+    if(msg)msg.innerHTML='<div class="notion-err">Fehler. Bitte nochmal versuchen.</div>';
+  }
+}
+
+async function doCopy(){
+  const kats=getEinkauf();
+  const lines=[];
+  kats.forEach(({kat,items})=>{
+    const r=items.filter(it=>!vorhanden[it.n]);
+    if(!r.length)return;
+    lines.push(kat);
+    r.forEach(it=>lines.push("- "+it.n+" ("+it.m+")"));
+    lines.push("");
+  });
+  try{
+    await navigator.clipboard.writeText(lines.join("\n").trim());
+    const btn=document.getElementById("btn-copy");
+    if(btn){btn.textContent="Kopiert!";setTimeout(()=>{btn.textContent="In Zwischenablage kopieren";},2000);}
+  }catch(e){
+    const btn=document.getElementById("btn-copy");
+    if(btn)btn.textContent="Fehlgeschlagen";
+  }
+}
+
+// ── Sheet ─────────────────────────────────────────────────────────────────────
+function openSheet(name){
+  sheetName=name;
+  const r=RZ[name];
+  if(!r)return;
+  sheetPort=r.b;
+  sheetBei="A";
+  document.getElementById("sh-title").textContent=name;
+  document.getElementById("sh-kcal").textContent=r.kcal+" kcal · "+r.prot+"g Protein";
+  renderSheetContent();
+  document.getElementById("sheet").classList.add("on");
+}
+
+function closeSheet(){
+  document.getElementById("sheet").classList.remove("on");
+}
+
+function changePort(d){
+  sheetPort=Math.max(1,Math.min(10,sheetPort+d));
+  renderSheetContent();
+}
+
+function setBei(v){
+  sheetBei=v;
+  renderSheetContent();
+}
+
+function renderSheetContent(){
+  const r=RZ[sheetName];
+  if(!r)return;
+  const zu=r.beilage?(sheetBei==="B"?[...r.zuK,...r.zuB]:[...r.zuK,...r.zuA]):r.zu;
+  const st=r.beilage?[...r.stK,...(sheetBei==="B"?r.stB:r.stA)]:r.st;
+
+  let html=`
+    <div class="port-row">
+      <span class="port-lbl">Portionen</span>
+      <div class="port-ctrl">
+        <button class="port-btn" onclick="changePort(-1)">−</button>
+        <span class="port-val">${sheetPort}</span>
+        <button class="port-btn" onclick="changePort(1)">+</button>
+      </div>
+    </div>`;
+
+  if(r.beilage){
+    html+=`<div class="bei-toggle">
+      <button class="bei-btn${sheetBei==="A"?" on":""}" onclick="setBei('A')">Kartoffelbrei</button>
+      <button class="bei-btn${sheetBei==="B"?" on":""}" onclick="setBei('B')">Kohlrabi-Bratkartoffeln</button>
+    </div>`;
+  }
+
+  html+=`<div class="sh-sec-lbl">Zutaten</div>
+    <div class="zu-list">
+      ${zu.map(it=>`<div class="zu-row"><span>${it.n}</span><span class="zu-menge">${sk(it,sheetPort,r.b)}</span></div>`).join("")}
+    </div>
+    <div class="sh-sec-lbl">Zubereitung</div>
+    <div class="step-list">
+      ${st.map((s,i)=>`<div class="step-row"><div class="step-num">${i+1}</div><div class="step-txt">${s}</div></div>`).join("")}
+    </div>`;
+
+  document.getElementById("sh-content").innerHTML=html;
+}
+
+// Init
+renderPlan();
+</script>
+</body>
+</html>
